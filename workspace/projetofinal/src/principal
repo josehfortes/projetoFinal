@@ -1,0 +1,92 @@
+
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.text.DecimalFormat;
+import java.util.Locale;
+
+public class principal {
+	static double Tempo = 1000.0;
+	static double dT = 0.01;
+	static int nReg = 4;
+	
+	public static void main(String[] args) throws IOException {
+		Locale.setDefault(new Locale("en", "US"));
+		
+		regiao [] reg = new regiao [nReg];
+		reg[0] = new regiao(0.9,0.005,0.8);
+		reg[1] = new regiao(0.001,0.001,1.3);
+		reg[2] = new regiao(0.001,0.001,1.3);
+		reg[3] = new regiao(0.001,0.001,1.3);
+		reg[0].setS(0.99);
+		reg[0].setI(0.01);
+		reg[0].setE(0.01);
+		double beta [][] = new double [nReg][nReg];
+		
+		for (int i=0;i<nReg;i++){
+			for (int j=0;j<nReg;j++){
+				beta[i][j]=0;
+			}
+		}
+		
+		beta[0][0]=0.009;
+		beta[1][1]=0.007;
+		beta[2][2]=0.002;
+		beta[3][3]=0.009;
+		
+		beta[0][1]=0.0009;
+		beta[0][2]=0.0001;
+		
+		beta[1][0]=0.0009;
+		beta[1][2]=0.0003;
+		beta[1][3]=0.0002;
+		
+		beta[2][0]=0.0001;
+		beta[2][1]=0.0003;
+		beta[2][3]=0.0002;
+		
+		beta[3][1]=0.0002;
+		beta[3][2]=0.0002;
+		
+		
+		
+		
+		
+		//manipulacao de arq
+		FileWriter arq = new FileWriter("grafico.txt");
+		PrintWriter gravarArq = new PrintWriter(arq);
+		
+		for (double t=0.0;t<Tempo;t+=dT){
+			DecimalFormat precisaoUm = new DecimalFormat("0.00"); 
+			gravarArq.print(precisaoUm.format(t));
+			
+			for(int i=0;i<nReg;i++){
+				for (int j=0;j<nReg;j++){
+					if ((beta[i][j]!=0)){
+						reg[i].dS -= (dT)*(beta[i][j]*reg[i].getS()*reg[j].getI());
+						reg[i].dI += (dT)*(beta[i][j]*reg[i].getS()*reg[j].getI());
+					}
+				}
+				reg[i].dI -= (dT)*(reg[i].getI()*reg[i].getTeta());
+				reg[i].dR += (dT)*(reg[i].getI()*reg[i].getTeta());
+				reg[i].setS(reg[i].getS()+reg[i].dS);
+				reg[i].setI(reg[i].getI()+reg[i].dI);
+				reg[i].setR(reg[i].getR()+reg[i].dR);
+				reg[i].dS = 0;
+				reg[i].dI = 0;
+				reg[i].dR = 0;
+				
+				//reg[i].dR += (dT)*(reg[i].getGama()*reg[i].getI() - reg[i].getR()*reg[i].getTeta());
+				//reg[i].setS(reg[i].getS()+reg[i].getR()*reg[i].getTeta());
+				//reg[i].setI(reg[i].getI()-reg[i].getGama()*reg[i].getI());
+				//reg[i].setR(reg[i].getR()+reg[i].dR);
+				
+				
+				gravarArq.print(" "+precisaoUm.format(reg[i].getS()) + " "+precisaoUm.format(reg[i].getI()) + " "+precisaoUm.format(reg[i].getR()));
+			}
+			gravarArq.println();
+		}
+		gravarArq.close();
+		arq.close();
+	}
+}
